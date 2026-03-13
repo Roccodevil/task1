@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Document Explainer</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .container { background-color: #f9f9f9; padding: 20px; border-radius: 8px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, select, button { width: 100%; padding: 10px; margin-top: 5px; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    #result { margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 5px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Upload Document for AI Explanation</h2>
+    <form action="/process" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="file">Select Document (PDF, PPT, CSV, Excel):</label>
+        <input type="file" name="file" id="file" required>
+      </div>
+
+      <div class="form-group">
+        <label for="format">Output Format:</label>
+        <select name="format" id="format">
+          <option value="report">Text Report</option>
+          <option value="speech">Audio Speech (Local CPU)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="doubt">Specific Doubt/Question (Optional):</label>
+        <input type="text" name="doubt" id="doubt" placeholder="e.g., Explain the main trend in the last chart...">
+      </div>
+
+      <button type="submit">Analyze & Explain</button>
+    </form>
+
+    {% if explanation %}
+    <div id="result">
+      <h3>AI Explanation:</h3>
+      <p>{{ explanation }}</p>
+      {% if audio_file %}
+        <audio controls>
+          <source src="{{ url_for('static', filename='audio/' + audio_file) }}" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>

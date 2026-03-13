@@ -1,0 +1,21 @@
+flask
+werkzeug
+crewai
+langchain-community
+langchain-text-splitters
+pyttsx3
+pandas
+openpyxl
+pdfplumber
+python-pptx
+pinecone
+tavily-python
+sentence-transformers
+torch
+transformers
+peft
+Pillow
+--extra-index-url https://download.pytorch.org/whl/cpu
+langchain-pinecone
+langchain
+litellm
