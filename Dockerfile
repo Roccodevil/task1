@@ -24,12 +24,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chmod +x /app/entrypoint.sh
-
 # Runtime directories used by the app.
 RUN mkdir -p uploads/chroma_db uploads/temp_images static/audio
 
 EXPOSE 5000
 
-ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "--workers", "1", "--threads", "4", "--timeout", "180", "--bind", "0.0.0.0:5000", "app:app"]

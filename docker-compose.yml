@@ -1,29 +1,12 @@
 services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: task1-ollama
-    volumes:
-      - ollama_data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-      start_period: 15s
-    restart: unless-stopped
-
   app:
     build:
       context: .
       dockerfile: Dockerfile
     image: task1-app:latest
     container_name: task1-app
-    depends_on:
-      ollama:
-        condition: service_healthy
     environment:
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       TAVILY_API_KEY: ${TAVILY_API_KEY:-}
       CREWAI_DISABLE_TELEMETRY: "true"
       OTEL_SDK_DISABLED: "true"
@@ -32,7 +15,6 @@ services:
       - "5000:5000"
     volumes:
       - ./uploads:/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
-
-volumes:
-  ollama_data:
