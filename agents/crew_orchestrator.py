@@ -14,7 +14,7 @@ def run_explainer_crew(filepath, user_doubt):
 
     raw_extracted_data = doc_parser.parse_file(filepath)
 
-    print("Storing extracted context in Pinecone Vector DB...")
+    print("Storing extracted context in local Chroma DB...")
     vector_db.store_document(raw_extracted_data)
 
     data_agent = create_data_agent()

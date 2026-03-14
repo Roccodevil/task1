@@ -1,50 +1,48 @@
 import os
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_pinecone import PineconeVectorStore
+import shutil
+
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from pinecone import Pinecone, ServerlessSpec
 
 class VectorDBTool:
-    def __init__(self, index_name="agentic-explainer-index"):
-        self.pinecone_api_key = os.getenv("PINECONE_API_KEY")
-        self.index_name = index_name
-        
-        # Initialize modern Pinecone client
-        self.pc = Pinecone(api_key=self.pinecone_api_key)
-        
-        # Use a lightweight, CPU-friendly embedding model
-        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        
-        self._ensure_index_exists()
+    def __init__(self, persist_directory="uploads/chroma_db"):
+        # Chroma will create a database folder right inside your uploads directory
+        self.persist_directory = persist_directory
 
-    def _ensure_index_exists(self):
-        """Creates the Pinecone index if it doesn't exist."""
-        if self.index_name not in self.pc.list_indexes().names():
-            self.pc.create_index(
-                name=self.index_name,
-                dimension=384, # Dimension for all-MiniLM-L6-v2
-                metric='cosine',
-                spec=ServerlessSpec(cloud='aws', region='us-east-1')
-            )
+        # Use your locally downloaded, CPU-friendly embedding model
+        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
     def store_document(self, text):
-        """Chunks the text and stores it in Pinecone."""
+        """Chunks the text and stores it in a local Chroma database."""
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         chunks = text_splitter.split_text(text)
-        
-        # Store using the modern PineconeVectorStore
-        PineconeVectorStore.from_texts(
-            texts=chunks, 
-            embedding=self.embeddings, 
-            index_name=self.index_name
+
+        # Optional: Clear the old database so agents don't get confused by old files
+        if os.path.exists(self.persist_directory):
+            shutil.rmtree(self.persist_directory)
+
+        # Create the Chroma vector database and save it to your hard drive
+        Chroma.from_texts(
+            texts=chunks,
+            embedding=self.embeddings,
+            persist_directory=self.persist_directory
         )
-        return "Document successfully embedded and stored in Vector DB."
+
+        return "Document successfully embedded and stored in LOCAL Chroma DB."
 
     def query_context(self, query, k=3):
-        """Retrieves the most relevant chunks based on the user's doubt."""
-        # Query using the modern PineconeVectorStore
-        vectorstore = PineconeVectorStore(index_name=self.index_name, embedding=self.embeddings)
+        """Retrieves the most relevant chunks from the local Chroma database."""
+        if not os.path.exists(self.persist_directory):
+            return "Memory Error: No local document memory found."
+
+        # Connect to the existing local database
+        vectorstore = Chroma(
+            persist_directory=self.persist_directory,
+            embedding_function=self.embeddings
+        )
+
         docs = vectorstore.similarity_search(query, k=k)
-        
+
         context = "\n\n".join([doc.page_content for doc in docs])
         return context

@@ -17,7 +17,7 @@ def search_internet(query: str) -> str:
 
 @tool("Query Local Document Memory")
 def query_memory(query: str) -> str:
-	"""Query Pinecone vector database to retrieve specific details from the uploaded document."""
+	"""Query the local Chroma document memory to retrieve specific details from the uploaded document."""
 	return vector_db.query_context(query)
 
 

@@ -1,14 +1,15 @@
 flask
 werkzeug
 crewai
-langchain-community
+langchain-huggingface
 langchain-text-splitters
+langchain-chroma==0.2.6
 pyttsx3
 pandas
 openpyxl
 pdfplumber
 python-pptx
-pinecone
+chromadb==1.1.0
 tavily-python
 sentence-transformers
 torch
@@ -16,6 +17,5 @@ transformers
 peft
 Pillow
 --extra-index-url https://download.pytorch.org/whl/cpu
-langchain-pinecone
 langchain
 litellm
