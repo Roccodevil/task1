@@ -2,28 +2,23 @@ from crewai import Agent
 from crewai.tools import tool
 
 from models.ollama_client import get_local_llm
-from tools.vector_db import VectorDBTool
 from tools.web_search import WebSearchTool
 
-vector_db = VectorDBTool()
 web_search = WebSearchTool()
 
-
-@tool("Search Internet")
-def search_internet(query: str) -> str:
-	"""Search the internet for missing context or definitions using Tavily."""
-	return web_search.search(query)
-
-
-@tool("Query Local Document Memory")
-def query_memory(query: str) -> str:
-	"""Query the local Chroma document memory to retrieve specific details from the uploaded document."""
-	return vector_db.query_context(query)
-
-
-def create_explainer_agent():
+def create_explainer_agent(vector_db_tool):
 	"""Instantiates the agent responsible for XAI and answering user doubts."""
 	local_llm = get_local_llm("llama3")
+
+	@tool("Search Internet")
+	def search_internet(query: str) -> str:
+		"""Search the internet for missing context or definitions using Tavily."""
+		return web_search.search(query)
+
+	@tool("Query Local Document Memory")
+	def query_memory(query: str) -> str:
+		"""Query the local Chroma document memory to retrieve specific details from the uploaded document."""
+		return vector_db_tool.query_context(query)
 
 	return Agent(
 		role='Lead AI Explainer & XAI Specialist',

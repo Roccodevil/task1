@@ -19,3 +19,4 @@ Pillow
 --extra-index-url https://download.pytorch.org/whl/cpu
 langchain
 litellm
+torchvision

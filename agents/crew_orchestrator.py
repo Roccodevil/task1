@@ -5,20 +5,20 @@ from agents.explainer_agent import create_explainer_agent
 from tools.document_parser import DocumentParser
 from tools.vector_db import VectorDBTool
 
-vector_db = VectorDBTool()
 doc_parser = DocumentParser()
 
 
-def run_explainer_crew(filepath, user_doubt):
+def run_explainer_crew(filepath, user_doubt, vector_db_path):
     print("Starting data parsing pipeline...")
 
     raw_extracted_data = doc_parser.parse_file(filepath)
 
     print("Storing extracted context in local Chroma DB...")
+    vector_db = VectorDBTool(persist_directory=vector_db_path)
     vector_db.store_document(raw_extracted_data)
 
     data_agent = create_data_agent()
-    explainer_agent = create_explainer_agent()
+    explainer_agent = create_explainer_agent(vector_db)
 
     extract_task = Task(
         description=f'Review this raw data snapshot and create a high-level summary of what the document contains: \n\n{raw_extracted_data[:3000]}...',

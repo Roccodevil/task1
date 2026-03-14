@@ -4,54 +4,141 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agentic Document Explainer</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    .container { background-color: #f9f9f9; padding: 20px; border-radius: 8px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input, select, button { width: 100%; padding: 10px; margin-top: 5px; }
-    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
-    #result { margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 5px; white-space: pre-wrap; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <div class="container">
-    <h2>Upload Document for AI Explanation</h2>
-    <form action="/process" method="POST" enctype="multipart/form-data">
-      <div class="form-group">
-        <label for="file">Select Document (PDF, PPT, CSV, Excel):</label>
-        <input type="file" name="file" id="file" required>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand">
+        <span class="brand-badge"></span>
+        Agentic Explainer
       </div>
+      <span class="status-pill">Ready for Upload</span>
+    </div>
 
-      <div class="form-group">
-        <label for="format">Output Format:</label>
-        <select name="format" id="format">
-          <option value="report">Text Report</option>
-          <option value="speech">Audio Speech (Local CPU)</option>
-        </select>
+    <div class="container">
+      <section class="hero">
+        <h1>Turn Dense Documents into Clear Insights</h1>
+        <p>Upload your files and get concise, structured AI explanations. Switch to speech output when you want a hands-free audio summary.</p>
+      </section>
+
+      <form id="upload-form" action="/process" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="file">Select Document (PDF, PPT, CSV, Excel)</label>
+          <input type="file" name="file" id="file" required>
+          <div class="hint">Large files may take a bit longer. Drag and drop is supported in most modern browsers.</div>
+        </div>
+
+        <div class="row">
+          <div class="form-group">
+            <label for="format">Output Format</label>
+            <select name="format" id="format">
+              <option value="report" {% if selected_format == 'report' %}selected{% endif %}>Text Only</option>
+              <option value="speech" {% if selected_format == 'speech' %}selected{% endif %}>Text + Speech</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="doubt">Specific Doubt or Question (Optional)</label>
+            <input type="text" name="doubt" id="doubt" placeholder="Example: Explain the biggest risk in this report">
+          </div>
+        </div>
+
+        <button id="submit-btn" type="submit">Analyze and Explain</button>
+      </form>
+
+      {% if explanation %}
+      <div id="result">
+        <h3>AI Explanation</h3>
+        <div id="explanation-text" class="explanation-body">{{ explanation | safe }}</div>
+        {% if selected_format == 'speech' %}
+          <div class="speech-controls">
+            <button id="speech-toggle" type="button" class="speech-btn">Start Speaking</button>
+            <span class="speech-note">Toggle to pause/resume from where it left off.</span>
+          </div>
+        {% endif %}
       </div>
-
-      <div class="form-group">
-        <label for="doubt">Specific Doubt/Question (Optional):</label>
-        <input type="text" name="doubt" id="doubt" placeholder="e.g., Explain the main trend in the last chart...">
-      </div>
-
-      <button type="submit">Analyze & Explain</button>
-    </form>
-
-    {% if explanation %}
-    <div id="result">
-      <h3>AI Explanation:</h3>
-      <p>{{ explanation }}</p>
-      {% if audio_file %}
-        <audio controls>
-          <source src="{{ url_for('static', filename='audio/' + audio_file) }}" type="audio/mpeg">
-          Your browser does not support the audio element.
-        </audio>
       {% endif %}
     </div>
-    {% endif %}
-  </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("upload-form");
+    const submitButton = document.getElementById("submit-btn");
+    const speechButton = document.getElementById("speech-toggle");
+    const explanationText = document.getElementById("explanation-text");
+
+    form.addEventListener("submit", () => {
+      submitButton.textContent = "Analyzing...";
+      submitButton.disabled = true;
+      submitButton.style.cursor = "not-allowed";
+      submitButton.style.opacity = "0.8";
+
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    });
+
+    if (speechButton && explanationText) {
+      let utterance = null;
+      let hasStarted = false;
+
+      const resetSpeechState = () => {
+        hasStarted = false;
+        utterance = null;
+        speechButton.textContent = "Start Speaking";
+      };
+
+      speechButton.addEventListener("click", () => {
+        if (!("speechSynthesis" in window)) {
+          speechButton.textContent = "Speech Not Supported";
+          speechButton.disabled = true;
+          return;
+        }
+
+        const synth = window.speechSynthesis;
+
+        if (!hasStarted) {
+          const textToSpeak = explanationText.innerText.replace(/\s+\n/g, "\n").trim();
+
+          if (!textToSpeak) {
+            speechButton.textContent = "No Text to Speak";
+            return;
+          }
+
+          utterance = new SpeechSynthesisUtterance(textToSpeak);
+          utterance.rate = 1;
+          utterance.pitch = 1;
+
+          utterance.onstart = () => {
+            speechButton.textContent = "Pause Speaking";
+          };
+          utterance.onend = resetSpeechState;
+          utterance.onerror = resetSpeechState;
+
+          synth.cancel();
+          synth.speak(utterance);
+
+          hasStarted = true;
+          return;
+        }
+
+        if (synth.speaking && !synth.paused) {
+          synth.pause();
+          speechButton.textContent = "Resume Speaking";
+        } else if (synth.paused) {
+          synth.resume();
+          speechButton.textContent = "Pause Speaking";
+        }
+      });
+
+      window.addEventListener("beforeunload", () => {
+        window.speechSynthesis.cancel();
+      });
+    }
+  </script>
 </body>
 </html>

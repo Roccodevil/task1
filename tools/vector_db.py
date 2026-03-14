@@ -1,5 +1,6 @@
 import os
 import shutil
+import gc
 
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -18,16 +19,22 @@ class VectorDBTool:
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         chunks = text_splitter.split_text(text)
 
-        # Optional: Clear the old database so agents don't get confused by old files
+        # For request-scoped paths this is mostly a safety guard.
         if os.path.exists(self.persist_directory):
             shutil.rmtree(self.persist_directory)
 
+        os.makedirs(self.persist_directory, exist_ok=True)
+
         # Create the Chroma vector database and save it to your hard drive
-        Chroma.from_texts(
+        vectorstore = Chroma.from_texts(
             texts=chunks,
             embedding=self.embeddings,
             persist_directory=self.persist_directory
         )
+
+        # Release local references promptly to reduce SQLite lock windows.
+        del vectorstore
+        gc.collect()
 
         return "Document successfully embedded and stored in LOCAL Chroma DB."
 
@@ -37,12 +44,17 @@ class VectorDBTool:
             return "Memory Error: No local document memory found."
 
         # Connect to the existing local database
-        vectorstore = Chroma(
-            persist_directory=self.persist_directory,
-            embedding_function=self.embeddings
-        )
+        vectorstore = None
+        try:
+            vectorstore = Chroma(
+                persist_directory=self.persist_directory,
+                embedding_function=self.embeddings
+            )
 
-        docs = vectorstore.similarity_search(query, k=k)
-
-        context = "\n\n".join([doc.page_content for doc in docs])
-        return context
+            docs = vectorstore.similarity_search(query, k=k)
+            context = "\n\n".join([doc.page_content for doc in docs])
+            return context
+        finally:
+            if vectorstore is not None:
+                del vectorstore
+            gc.collect()
