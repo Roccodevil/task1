@@ -1,0 +1,25 @@
+# Git and local tooling
+.git
+.gitignore
+.vscode
+
+# Python cache and virtual environments
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+venv/
+.venv/
+
+# Environment and local runtime state
+.env
+uploads/chroma_db/
+uploads/temp_images/
+
+# Build/test leftovers
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/

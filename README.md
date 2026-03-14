@@ -221,6 +221,37 @@ Then:
 
 ---
 
+## 🐳 Docker Build & Run
+
+This repository now includes a production-ready container setup.
+
+### Build The Image
+
+```bash
+docker build -t task1-app:latest .
+```
+
+### Run With Docker Compose (Recommended)
+
+```bash
+docker compose up --build
+```
+
+App URL:
+- http://127.0.0.1:5000
+
+### Ollama Connectivity From Container
+
+The app reads Ollama endpoint from:
+- `OLLAMA_BASE_URL` (default in compose: `http://host.docker.internal:11434`)
+
+Make sure Ollama is running on the host and `llama3` is available before starting the container.
+
+Optional environment variable:
+- `TAVILY_API_KEY` for web search fallback tool
+
+---
+
 ## ✅ Advantages Of This Design
 
 - Better grounding through targeted memory queries

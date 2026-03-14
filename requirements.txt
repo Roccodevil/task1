@@ -1,6 +1,7 @@
 flask
 werkzeug
 crewai
+python-dotenv
 langchain-huggingface
 langchain-text-splitters
 langchain-chroma==0.2.6
@@ -20,3 +21,4 @@ Pillow
 langchain
 litellm
 torchvision
+gunicorn
