@@ -149,30 +149,103 @@ This project follows a practical two-phase approach:
 
 ## 🚀 Setup & Installation
 
-### 1) Prerequisites
+### 1) Mandatory Prerequisites
 
-Install Ollama and pull llama3:
+You need all of the following before running this app:
+
+- Docker Desktop (or Docker Engine + Compose v2)
+- Ollama installed on your local machine
+- `llama3` model pulled in Ollama
+
+Install/start Ollama and pull `llama3`:
 
 ```bash
 # Linux/macOS
 curl -fsSL https://ollama.com/install.sh | sh
-ollama run llama3
+ollama pull llama3
+ollama serve
 ```
 
-Keep Ollama running in the background.
-
-Optional Linux speech dependency (if required for your environment):
-
-```bash
-sudo apt-get update
-sudo apt-get install espeak
+```powershell
+# Windows PowerShell
+ollama pull llama3
+ollama serve
 ```
 
-### 2) Python Environment
+Important:
+- Keep Ollama running on the host machine while the Docker container is running.
+- This app container connects to host Ollama using `OLLAMA_BASE_URL`.
+- First startup can take around 10 minutes depending on CPU, disk, and model warm-up.
+
+### 2) Project Setup
 
 ```bash
-git clone https://github.com/yourusername/AgenticAI_Project.git
-cd AgenticAI_Project
+git clone https://github.com/Roccodevil/task1.git
+cd task1
+```
+
+### 3) VLM Adapter Placement
+
+Ensure adapter artifacts are available at:
+- `models/custom_vlm_adapter`
+
+---
+
+## 🐳 Docker Quickstart (Recommended)
+
+This is the primary way to run the project.
+
+### Build Image
+
+```bash
+docker build -t task1-app:latest .
+```
+
+### Run App Container (Compose)
+
+```bash
+docker compose up -d
+```
+
+Open:
+- http://127.0.0.1:5000
+
+Stop:
+
+```bash
+docker compose down
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+### Run Using Existing VS Code Tasks
+
+If you are using this repo in VS Code, task shortcuts are already configured:
+
+- `Run App`
+- `Stop App`
+- `View Logs`
+- `Rebuild and Run App`
+
+### Container Runtime Notes
+
+- App container name: `task1-app`
+- Exposed app port: `5000`
+- Persistent uploaded data: `./uploads` mounted to `/app/uploads`
+- Default Ollama endpoint in compose: `http://host.docker.internal:11434`
+- Optional env var: `TAVILY_API_KEY` for web-search fallback
+
+---
+
+## 🧪 Local Python Run (Alternative To Docker)
+
+If you prefer not to run with Docker:
+
+```bash
 python -m venv venv
 ```
 
@@ -186,25 +259,14 @@ source venv/bin/activate
 venv\Scripts\Activate.ps1
 ```
 
-### 3) Install Dependencies
-
-Install CPU-compatible PyTorch first (recommended), then install project requirements:
+Install dependencies:
 
 ```bash
-pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4) VLM Adapter Placement
-
-Place your adapter at:
-- models/custom_vlm_adapter
-
----
-
-## 🎮 How To Use
-
-Run the server:
+Run:
 
 ```bash
 python app.py
@@ -213,7 +275,10 @@ python app.py
 Open:
 - http://127.0.0.1:5000
 
-Then:
+---
+
+## 🎮 How To Use
+
 1. Upload PDF, CSV, Excel, or image.
 2. Enter a focused doubt/question.
 3. Choose Text Only or Text + Speech.
@@ -221,34 +286,15 @@ Then:
 
 ---
 
-## 🐳 Docker Build & Run
+## ⏱️ First-Run Behavior (Expected)
 
-This repository now includes a production-ready container setup.
+On first run, startup may take up to ~10 minutes because of:
 
-### Build The Image
+- Initial Python dependency and model initialization
+- Local embedding/model warm-up
+- Vector database directory initialization
 
-```bash
-docker build -t task1-app:latest .
-```
-
-### Run With Docker Compose (Recommended)
-
-```bash
-docker compose up --build
-```
-
-App URL:
-- http://127.0.0.1:5000
-
-### Ollama Connectivity From Container
-
-The app reads Ollama endpoint from:
-- `OLLAMA_BASE_URL` (default in compose: `http://host.docker.internal:11434`)
-
-Make sure Ollama is running on the host and `llama3` is available before starting the container.
-
-Optional environment variable:
-- `TAVILY_API_KEY` for web search fallback tool
+Later runs are typically much faster.
 
 ---
 

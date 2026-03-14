@@ -26,6 +26,7 @@ dist/
 .env
 .env.*
 !.env.example
+docker-images/*
 
 # Local runtime/generated app data
 uploads/*
